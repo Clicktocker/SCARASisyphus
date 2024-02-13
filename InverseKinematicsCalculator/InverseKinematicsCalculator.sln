@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32901.82
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "InverseKinematicsCalculator", "InverseKinematicsCalculator.pyproj", "{1A1C80BB-295C-43C1-8DC7-5BF3782AA4EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A1C80BB-295C-43C1-8DC7-5BF3782AA4EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A1C80BB-295C-43C1-8DC7-5BF3782AA4EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B434245-805A-47E8-A7CB-A73E83A798CC}
+	EndGlobalSection
+EndGlobal
