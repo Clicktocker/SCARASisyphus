@@ -1,4 +1,5 @@
 import math
+import sys
 
 # Eoin Brennan Inverse Kinematics Calculator for Sisyphus System
 print("Running Inverse Kinematics Calucator")
@@ -8,23 +9,18 @@ print("Running Inverse Kinematics Calucator")
 Length1 = 7.5
 Length2 = 7.5
 
-# Forward Kinematics Calculation for testing
-
-Angle1 = 3/2 * math.pi
-Angle2 = math.pi/2
+# Target End Effector Position in Cartesian Coordinates
 
 Effector = [0,0]
-Effector[0] = Length1 * math.sin(Angle1) + Length2 *(math.sin(Angle1 + Angle2))
-Effector[1] = Length1 * math.cos(Angle1) + Length2 *(math.cos(Angle1 + Angle2))
+Effector[0] = 0
+Effector[1] = 10
 
+print("Target End Pos is:" , Effector)
 
-print("Caluclated EndPos")
-print("%.2f" % Effector[0])
-print("%.2f" % Effector[1])
-
-# Convert to Rho and Phi
+# Convert cartesian to polar
 
 Magnitude = (Effector[0] ** 2 + Effector[1] ** 2) ** (1/2)
+print("Magnitude is: ", "%.2f" % Magnitude)
 
 if Effector[0] == 0:
 
@@ -43,16 +39,30 @@ elif Effector[1] == 0:
 else:
     Angle = math.atan(Effector[1] / Effector[0])
 
-    print("Debug Angle", Angle)
-
     if Effector[1] > 0 and Angle < 0:
         Angle = Angle + (2*math.pi)
 
     elif Effector[1] < 0:
         Angle = math.pi + Angle
+
+
+# Check for being out of coordinate space
+if Magnitude > 15:
+    print("Error with coordinates outside workspace")
+    sys.exit
+
+
+# Inverse Kinematics Calculation
+AngleComp = math.acos( (0.5 * Magnitude) / Length1)
+Joint1 = Angle - AngleComp
+Joint2 = 2 * AngleComp
+
+
         
 
-print("\nConverting to magnitude and phase")
-print("Magnitude is: ", "%.2f" % Magnitude)
-print("Angle is: ", "%.2f" % Angle)
-print("Angle in degrees", Angle / math.pi * 180)
+print("\nInverse Kinematics Joint Values")
+print("Joint1 is: ", "%.2f" % Joint1)
+print("Joint2 is: ", "%.2f" % Joint2)
+print("\nInDegrees")
+print("Joint1 is: ", "%.2f" % (Joint1 / math.pi * 180))
+print("Joint2 is: ", "%.2f" % (Joint2 / math.pi * 180))
