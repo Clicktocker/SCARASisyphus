@@ -35,7 +35,7 @@ if Effector[0] == 0:
 
 elif Effector[1] == 0:
 
-    if EEffector[0] > 0:
+    if Effector[0] > 0:
         Angle = math.pi/2
     else:
         Angle = (3/2) * math.pi
