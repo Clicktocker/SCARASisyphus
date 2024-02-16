@@ -1,4 +1,6 @@
+import tkinter
 import math
+import time
 import sys
 import numpy as np
 
@@ -60,6 +62,7 @@ Length1 = 7.5
 Length2 = 7.5
 
 Effector = [0,0]
+#Joints = np.array([[0, 0]])
 
 i = 0
 for x in x_rec:
@@ -111,12 +114,20 @@ for x in x_rec:
     Joint1 = Angle - AngleComp
     Joint2 = 2 * AngleComp
 
+    if i == 0:
+        Joints = np.array([[Joint1, Joint2]])
 
+    else:
+        test = np.array([[Joint1, Joint2]])
+        Joints = np.concatenate( ( Joints, test ), axis = 0)
         
+
+    
 
     #print("\nInverse Kinematics Joint Values")
     print("Joint1 is: ", "%.2f" % Joint1)
     print("Joint2 is: ", "%.2f" % Joint2)
+    print("Current size: ", np.shape(Joints))
     #print("\nInDegrees")
     #print("Joint1 is: ", "%.2f" % (Joint1 / math.pi * 180))
     #print("Joint2 is: ", "%.2f" % (Joint2 / math.pi * 180))
@@ -124,4 +135,3 @@ for x in x_rec:
     i = i+1
 
 
-    
