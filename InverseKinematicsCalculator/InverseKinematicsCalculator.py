@@ -19,11 +19,12 @@ def func_y(t):
 
 Increment = 0.05     # The resolution of increments in t
 Radius = 0.5        # The target distance between points
-LineLength = 2      # The length of the parametric line, multiplied by 2*pi
+LineLength = 4      # The length of the parametric line, multiplied by 2*pi
 
-buffsize = 5        # Size of buffer for displaying joint forms
+buffsize = 200       # Size of buffer for displaying joint forms
 elements = [0] * ( (buffsize*2) + 2 ) # Elements for display which are redrawn each frame
 buffsel = 0         # Starting point in buffer, leave as zero
+delay = 0.0001        # Delay for how long each frame should take in seconds
 
 # Initial states setup
 x_rec = np.array([func_x(0)])
@@ -170,7 +171,7 @@ def draw(elements):
     buffer[buffsel, 2] = Length1 * math.sin(Calcs[i,0]) + Length2 *(math.sin(Calcs[i,0] + Calcs[i,1]))
     buffer[buffsel, 3] = Length1 * math.cos(Calcs[i,0]) + Length2 *(math.cos(Calcs[i,0] + Calcs[i,1]))
 
-    for x in range(5):
+    for x in range(buffsize):
         if buffsel == -1:
             buffsel = buffsize
 
@@ -202,12 +203,14 @@ for i in range(buffsize):
 
 i = 0
 while True:
+    timeloop = time.time()
     elements = draw(elements)
 
 
-
-    
     canvas.update()
     print("Updated display")
-    time.sleep(0.05)
+    
+    while time.time() < (timeloop + delay):
+        time.sleep(0.01)
+    #buffsel = buffsel + 1
     i = i+1
