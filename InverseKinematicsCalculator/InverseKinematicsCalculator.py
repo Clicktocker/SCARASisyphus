@@ -21,6 +21,10 @@ Increment = 0.05     # The resolution of increments in t
 Radius = 0.5        # The target distance between points
 LineLength = 2      # The length of the parametric line, multiplied by 2*pi
 
+buffsize = 5        # Size of buffer for displaying joint forms
+elements = [0] * ( (buffsize*2) + 2 ) # Elements for display which are redrawn each frame
+buffsel = 0         # Starting point in buffer, leave as zero
+
 # Initial states setup
 x_rec = np.array([func_x(0)])
 y_rec = np.array([func_y(0)])
@@ -62,7 +66,7 @@ Length1 = 7.5
 Length2 = 7.5
 
 Effector = [0,0]
-#Joints = np.array([[0, 0]])
+
 
 i = 0
 for x in x_rec:
@@ -115,11 +119,11 @@ for x in x_rec:
     Joint2 = 2 * AngleComp
 
     if i == 0:
-        Joints = np.array([[Joint1, Joint2]])
+        Calcs = np.array([[Joint1, Joint2, Effector[0], Effector[1]]])
 
     else:
-        test = np.array([[Joint1, Joint2]])
-        Joints = np.concatenate( ( Joints, test ), axis = 0)
+        test = np.array([[Joint1, Joint2, Effector[0], Effector[1]]])
+        Calcs = np.concatenate( ( Calcs, test), axis = 0)
         
 
     
@@ -127,7 +131,7 @@ for x in x_rec:
     #print("\nInverse Kinematics Joint Values")
     print("Joint1 is: ", "%.2f" % Joint1)
     print("Joint2 is: ", "%.2f" % Joint2)
-    print("Current size: ", np.shape(Joints))
+    print("Current size: ", np.shape(Calcs))
     #print("\nInDegrees")
     #print("Joint1 is: ", "%.2f" % (Joint1 / math.pi * 180))
     #print("Joint2 is: ", "%.2f" % (Joint2 / math.pi * 180))
@@ -135,3 +139,75 @@ for x in x_rec:
     i = i+1
 
 
+# Graphics drawing of movement
+    
+canvas_size = 1000
+canvas = tkinter.Canvas(bg="#08141a", width=canvas_size, height=canvas_size)
+canvas.pack()
+
+def calcCoord(xin, yin):
+    xout = ( (4 * canvas_size/10) /  (15 / xin) ) + canvas_size/2
+    yout = ( (4 * canvas_size/10) /  (15 / yin) ) + canvas_size/2
+
+    return xout, yout
+
+
+canvas.create_oval(canvas_size / 10, canvas_size / 10, 9* canvas_size/10, 9* canvas_size/10, outline='white')
+
+# 
+def draw(elements):
+    for element in elements:
+        canvas.delete(element)
+    
+    global buffsel
+     
+    if buffsel == buffsize:
+        buffsel = 0
+
+
+    buffer[buffsel, 0] = Length1*math.sin(Calcs[i,0])
+    buffer[buffsel, 1] = Length1*math.cos(Calcs[i,0])
+    buffer[buffsel, 2] = Length1 * math.sin(Calcs[i,0]) + Length2 *(math.sin(Calcs[i,0] + Calcs[i,1]))
+    buffer[buffsel, 3] = Length1 * math.cos(Calcs[i,0]) + Length2 *(math.cos(Calcs[i,0] + Calcs[i,1]))
+
+    for x in range(5):
+        if buffsel == -1:
+            buffsel = buffsize
+
+        # Arm1
+        x1, y1 = calcCoord(buffer[buffsel, 0], buffer[buffsel, 1])
+        elements[(x*2)] = canvas.create_line(canvas_size/2, canvas_size/2, x1, y1, width = 4, fill = "#2a638c")
+
+        # Arm2
+        x2, y2 = calcCoord(buffer[buffsel, 2], buffer[buffsel, 3])
+        elements[(x*2) + 1] = canvas.create_line(x1, y1, x2, y2, width = 4, fill =  "#2a638c")
+        
+
+        buffsel = buffsel - 1
+
+    # Small circle in center
+    elements[(buffsize*2) + 1] = canvas.create_oval(canvas_size / 2 - 10, canvas_size / 2 - 10,
+                                    canvas_size / 2 + 10, canvas_size / 2 + 10, fill="#405b80",
+                                    width=0)
+
+    
+    return elements
+
+
+# Drawing Loop
+initial = np.array([[7.5 * math.sin(Calcs[0,0]), 7.5 * math.cos(Calcs[0,0]), Calcs[0,2], Calcs[0,3]]])
+buffer = initial
+for i in range(buffsize):
+    buffer = np.concatenate( (buffer, initial), axis = 0)
+
+i = 0
+while True:
+    elements = draw(elements)
+
+
+
+    
+    canvas.update()
+    print("Updated display")
+    time.sleep(0.05)
+    i = i+1
