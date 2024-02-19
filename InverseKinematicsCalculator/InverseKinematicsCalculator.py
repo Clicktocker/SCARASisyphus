@@ -19,12 +19,13 @@ def func_y(t):
 
 Increment = 0.05     # The resolution of increments in t
 Radius = 0.5        # The target distance between points
-LineLength = 4      # The length of the parametric line, multiplied by 2*pi
+LineLength = 2      # The length of the parametric line, multiplied by 2*pi
+resolution = 0.01   # The resolution of t incrememnts to draw the line to follow
 
-buffsize = 200       # Size of buffer for displaying joint forms
+buffsize = 5       # Size of buffer for displaying joint forms
 elements = [0] * ( (buffsize*2) + 2 ) # Elements for display which are redrawn each frame
 buffsel = 0         # Starting point in buffer, leave as zero
-delay = 0.0001        # Delay for how long each frame should take in seconds
+delay = 0.5        # Delay for how long each frame should take in seconds
 
 # Initial states setup
 x_rec = np.array([func_x(0)])
@@ -147,13 +148,26 @@ canvas = tkinter.Canvas(bg="#08141a", width=canvas_size, height=canvas_size)
 canvas.pack()
 
 def calcCoord(xin, yin):
-    xout = ( (4 * canvas_size/10) /  (15 / xin) ) + canvas_size/2
-    yout = ( (4 * canvas_size/10) /  (15 / yin) ) + canvas_size/2
+    xout = ( (4 * canvas_size/10) *  (xin / 15) ) + canvas_size/2
+    yout = ( (4 * canvas_size/10) *  (yin / 15) ) + canvas_size/2
 
     return xout, yout
 
 
 canvas.create_oval(canvas_size / 10, canvas_size / 10, 9* canvas_size/10, 9* canvas_size/10, outline='white')
+
+# Draw line to follow
+t = resolution
+x, y = calcCoord(func_x(0), func_y(0))
+linePrev = [x, y]
+lineCurr = linePrev
+while t < (LineLength * 2 * math.pi):
+    x, y = calcCoord(func_x(t), func_y(t))
+    lineCurr = [x, y]
+    canvas.create_line(linePrev[0], linePrev[1], lineCurr[0], lineCurr[1], fill = '#ce0505')
+    print("Drawing base line")
+    linePrev = lineCurr
+    t = t + resolution
 
 # 
 def draw(elements):
