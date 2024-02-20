@@ -22,10 +22,13 @@ Radius = 0.5        # The target distance between points
 LineLength = 2      # The length of the parametric line, multiplied by 2*pi
 resolution = 0.01   # The resolution of t incrememnts to draw the line to follow
 
-buffsize = 5       # Size of buffer for displaying joint forms
+startColour = "#05743C" # Colours for the arm gradients
+endColour = "#3BE490"
+
+buffsize = 51       # Size of buffer for displaying joint forms
 elements = [0] * ( (buffsize*2) + 2 ) # Elements for display which are redrawn each frame
 buffsel = 0         # Starting point in buffer, leave as zero
-delay = 0.5        # Delay for how long each frame should take in seconds
+delay = 0.1        # Delay for how long each frame should take in seconds
 
 # Initial states setup
 x_rec = np.array([func_x(0)])
@@ -165,11 +168,43 @@ while t < (LineLength * 2 * math.pi):
     x, y = calcCoord(func_x(t), func_y(t))
     lineCurr = [x, y]
     canvas.create_line(linePrev[0], linePrev[1], lineCurr[0], lineCurr[1], fill = '#ce0505')
-    print("Drawing base line")
     linePrev = lineCurr
     t = t + resolution
 
-# 
+# Colour calculation for arm gradient
+
+colourCals = ["0x"+startColour[1:3], "0x"+startColour[3:5], "0x"+startColour[5:7], "0x"+endColour[1:3], "0x"+endColour[3:5], "0x"+endColour[5:7]]
+print(colourCals)
+i = 0
+for x in colourCals:
+    colourCals[i] = int(x, 0)
+    i = i+1
+colourInc = [ (colourCals[3] - colourCals[0]) / (buffsize - 1), (colourCals[4] - colourCals[1]) / (buffsize - 1), (colourCals[5] - colourCals[2]) / (buffsize - 1) ]
+
+colourSel = [startColour]
+i = 1
+while i < (buffsize):
+    colourStore = [hex(int(colourCals[0] + (colourInc[0] * i) )), hex(int(colourCals[1] + (colourInc[1] * i) )), hex(int(colourCals[2] + (colourInc[2] * i)))]
+    print(colourStore)
+    j = 0
+    for x in colourStore:
+        if len(x) < 4:
+            colourStore[j] = x[0:2] + "0" + x[2:]
+        j = j+1
+    colourSel.append( str( colourStore[0][2:] + colourStore[1][2:] + colourStore[0][2:] ) )
+    i = i+1
+print(colourSel)
+
+i = 0
+for x in colourSel:
+    if len(x) < 7:
+        colourSel[i] = "#" + x
+    i = i+1
+    
+print(colourSel)
+
+
+# Drawing Function for animated components
 def draw(elements):
     for element in elements:
         canvas.delete(element)
@@ -191,11 +226,11 @@ def draw(elements):
 
         # Arm1
         x1, y1 = calcCoord(buffer[buffsel, 0], buffer[buffsel, 1])
-        elements[(x*2)] = canvas.create_line(canvas_size/2, canvas_size/2, x1, y1, width = 4, fill = "#2a638c")
+        elements[(x*2)] = canvas.create_line(canvas_size/2, canvas_size/2, x1, y1, width = 4, fill = colourSel[x])
 
         # Arm2
         x2, y2 = calcCoord(buffer[buffsel, 2], buffer[buffsel, 3])
-        elements[(x*2) + 1] = canvas.create_line(x1, y1, x2, y2, width = 4, fill =  "#2a638c")
+        elements[(x*2) + 1] = canvas.create_line(x1, y1, x2, y2, width = 4, fill = colourSel[x])
         
 
         buffsel = buffsel - 1
@@ -225,6 +260,6 @@ while True:
     print("Updated display")
     
     while time.time() < (timeloop + delay):
-        time.sleep(0.01)
+        time.sleep(0.05)
     #buffsel = buffsel + 1
     i = i+1
