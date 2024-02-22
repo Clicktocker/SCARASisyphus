@@ -10,22 +10,24 @@ print("Running Inverse Kinematics Calucator")
 # Generating parametric paths to follow
 def func_x(t):
     return 11 * math.sin(t)
+    #return (0.1 * t) - 6
 
 def func_y(t):
     return 10 * math.cos(0.821 * t)
+    #return 2
 
 
 # Breaking parametric function into equally distant pieces
 
-Increment = 0.05     # The resolution of increments in t
+Increment = 0.01     # The resolution of increments in t
 Radius = 0.5        # The target distance between points
-LineLength = 2      # The length of the parametric line, multiplied by 2*pi
+LineLength = 8      # The length of the parametric line, multiplied by 2*pi
 resolution = 0.01   # The resolution of t incrememnts to draw the line to follow
 
 startColour = "#05743C" # Colours for the arm gradients
 endColour = "#3BE490"
 
-buffsize = 51       # Size of buffer for displaying joint forms
+buffsize = 10       # Size of buffer for displaying joint forms
 elements = [0] * ( (buffsize*2) + 2 ) # Elements for display which are redrawn each frame
 buffsel = 0         # Starting point in buffer, leave as zero
 delay = 0.1        # Delay for how long each frame should take in seconds
@@ -103,7 +105,7 @@ for x in x_rec:
             Angle = (3/2) * math.pi
 
     else:
-        Angle = math.atan(Effector[1] / Effector[0])
+        Angle = math.atan(Effector[0] / Effector[1])
 
         if Effector[1] > 0 and Angle < 0:
             Angle = Angle + (2*math.pi)
@@ -122,6 +124,9 @@ for x in x_rec:
     AngleComp = math.acos( (0.5 * Magnitude) / Length1)
     Joint1 = Angle - AngleComp
     Joint2 = 2 * AngleComp
+
+    if Joint1 < 0:
+        Joint1 = 2*math.pi + Joint1
 
     if i == 0:
         Calcs = np.array([[Joint1, Joint2, Effector[0], Effector[1]]])
