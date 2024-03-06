@@ -9,28 +9,35 @@ print("Running Inverse Kinematics Calucator")
 
 # Generating parametric paths to follow
 def func_x(t):
-    return 11 * math.sin(t)
-    #return (0.1 * t) - 6
+    #return 5 * math.sin(1 * t)
+    return 10 * math.sin(1 * t) + 3.5 *math.sin(0.873 * t)
+    return 11 * math.sin(0.94432 * t)
 
 def func_y(t):
-    return 10 * math.cos(0.821 * t)
-    #return 2
+    #return 5 * math.cos(2 * t)
+    return 10 * math.cos(1 * t) + 3.5 *math.sin(0.7311 * t)
+    return 10 * math.cos(0.8776 * t)
 
 
 # Breaking parametric function into equally distant pieces
 
 Increment = 0.01     # The resolution of increments in t
 Radius = 0.5        # The target distance between points
-LineLength = 8      # The length of the parametric line, multiplied by 2*pi
+LineLength = 15      # The length of the parametric line, multiplied by 2*pi
 resolution = 0.01   # The resolution of t incrememnts to draw the line to follow
 
 startColour = "#05743C" # Colours for the arm gradients
 endColour = "#3BE490"
 
-buffsize = 10       # Size of buffer for displaying joint forms
+buffsize = 20       # Size of buffer for displaying joint forms
 elements = [0] * ( (buffsize*2) + 2 ) # Elements for display which are redrawn each frame
 buffsel = 0         # Starting point in buffer, leave as zero
-delay = 0.1        # Delay for how long each frame should take in seconds
+delay = 0.05        # Delay for how long each frame should take in seconds
+
+
+# Convert R,G,B into a hex string 
+def rgb2hex(r,g,b):
+    return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
 # Initial states setup
 x_rec = np.array([func_x(0)])
@@ -73,7 +80,6 @@ Length1 = 7.5
 Length2 = 7.5
 
 Effector = [0,0]
-
 
 i = 0
 for x in x_rec:
@@ -137,14 +143,9 @@ for x in x_rec:
         
 
     
-
-    #print("\nInverse Kinematics Joint Values")
     print("Joint1 is: ", "%.2f" % Joint1)
     print("Joint2 is: ", "%.2f" % Joint2)
     print("Current size: ", np.shape(Calcs))
-    #print("\nInDegrees")
-    #print("Joint1 is: ", "%.2f" % (Joint1 / math.pi * 180))
-    #print("Joint2 is: ", "%.2f" % (Joint2 / math.pi * 180))
 
     i = i+1
 
@@ -177,7 +178,7 @@ while t < (LineLength * 2 * math.pi):
     t = t + resolution
 
 # Colour calculation for arm gradient
-
+    
 colourCals = ["0x"+startColour[1:3], "0x"+startColour[3:5], "0x"+startColour[5:7], "0x"+endColour[1:3], "0x"+endColour[3:5], "0x"+endColour[5:7]]
 print(colourCals)
 i = 0
@@ -189,24 +190,12 @@ colourInc = [ (colourCals[3] - colourCals[0]) / (buffsize - 1), (colourCals[4] -
 colourSel = [startColour]
 i = 1
 while i < (buffsize):
-    colourStore = [hex(int(colourCals[0] + (colourInc[0] * i) )), hex(int(colourCals[1] + (colourInc[1] * i) )), hex(int(colourCals[2] + (colourInc[2] * i)))]
+    colourStore = [int(colourCals[0] + (colourInc[0] * i) ), int(colourCals[1] + (colourInc[1] * i) ), int(colourCals[2] + (colourInc[2] * i))]
     print(colourStore)
-    j = 0
-    for x in colourStore:
-        if len(x) < 4:
-            colourStore[j] = x[0:2] + "0" + x[2:]
-        j = j+1
-    colourSel.append( str( colourStore[0][2:] + colourStore[1][2:] + colourStore[0][2:] ) )
+    colourSel.append( rgb2hex(colourStore[0], colourStore[1], colourStore[2]) )
     i = i+1
 print(colourSel)
 
-i = 0
-for x in colourSel:
-    if len(x) < 7:
-        colourSel[i] = "#" + x
-    i = i+1
-    
-print(colourSel)
 
 
 # Drawing Function for animated components
