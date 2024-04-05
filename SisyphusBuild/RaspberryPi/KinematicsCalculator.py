@@ -2,21 +2,21 @@ import math, time
 import paho.mqtt.client as mqtt
 
 ## TEMP VARIABLES
-increment = 0.01     # The resolution of increments in time (t)
-simTime = 1      # Time length for system to draw
+increment = 0.05     # The resolution of increments in time (t)
+simTime = 4*math.pi      # Time length for system to draw
 ## TEMP VARIABLES
 
-##~~~~~~~~~~~~~Eoin Brennan Kinematics Visualiser for Sisyphus System ~~~~~~~~~~~~~~~~~~~#
+##~~~~~~~~~~~~~Eoin Brennan Kinematics Visualiser for Sisyphus System ~~~~~~~~~~~~~~~~~~~##
 
 # Script that calculates joint values and arm positions for user control visualiser.
 # Pushes joint control lists to motor controller when user desired.
 
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
 ## User Variables
 
 armLength = [57.5, 57.5]
-drawArea = 115
+drawArea = 115 
 
 ## System Variables
 
@@ -58,7 +58,7 @@ def UserDisplay_Callback(client,userdata,message):
         match msgSplit[1]:
             case "Rose":   # Case to create a roses
                 print("Rose test case")
-                generateRose(int(msgSplit[2]), int(msgSplit[3]))
+                GenerateRose(int(msgSplit[2]), int(msgSplit[3]))
                 PublishPath(user_topic)
 
 
@@ -67,6 +67,8 @@ def UserDisplay_Callback(client,userdata,message):
 
             case "Para":   # Generate Parametric path
                 print("Parametric test case")
+                GenerateParametric()
+                PublishPath(user_topic)
 
             case "Sel":   # Select, push cuurent path through to system
                 print("Confirm test case")
@@ -103,16 +105,47 @@ def PolarToJoint( angle, magnitude):
 
 
 # Rose Path Generation
-def generateRose(n, d):
-    print("Begin Rose Generation")
-    global currPath, armLength
+def GenerateRose(n, d):
+    print("Begin Rose generation")
+    global currPath, armLength, increment
+    currPath = []
+
+    for i in range(int(4*math.pi/increment)+2):
+        # Generate x and y coordinates
+        if i == int(simTime/increment)+1: i = 4*math.pi
+        else: i = i*increment
+        
+        roseCoeff = (drawArea - 5) * math.cos((n/d) * i)
+        x_end = roseCoeff*math.cos(i)
+        y_end = roseCoeff*math.sin(i)
+
+        # Convert to polar
+        angle, magnitude = CartToPolar(x_end,y_end)
+
+        # Calculate the inverse kinematics to get joint rotations
+        jointBase, jointArm = PolarToJoint(angle, magnitude)
+
+        # Calculate the arm midpoint from the angle and arm length
+        x_mid = math.sin(angle) * armLength[0]
+        y_mid = math.sin(angle) * armLength[0]
+
+        #Format the calculations into path structure
+        pathPoint = pathConstruct(x_end, y_end, x_mid, y_mid, jointBase, jointArm)
+        currPath.append(pathPoint)
+
+    print("Finished generating rose path")
+    print("Length of currPath is: ", len(currPath))
+
+def GenerateParametric():
+    print("Begin Parametric Generation")
+    global currPath, armLength, increment
     currPath = []
 
     for i in range(int(simTime/increment)):
         # Generate x and y coordinates
-        roseCoeff = (drawArea - 5) * math.cos((n/d) * i)
-        x_end = roseCoeff*math.cos(i)
-        y_end = roseCoeff*math.sin(i)
+        j = i*increment
+        x_end = drawArea*0.6*math.cos(i)
+        y_end = drawArea*0.4*math.sin(i)
 
         # Convert to polar
         angle, magnitude = CartToPolar(x_end,y_end)
