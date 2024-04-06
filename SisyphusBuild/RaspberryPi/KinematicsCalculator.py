@@ -62,19 +62,22 @@ def UserDisplay_Callback(client,userdata,message):
                 PublishPath(user_topic)
 
 
-            case "Liss":   # Generate Lissajous path
+            case "Liss":     # Generate Lissajous path
                 print("Lissajous test case")
 
-            case "Para":   # Generate Parametric path
+            case "Para":     # Generate Parametric path
                 print("Parametric test case")
                 GenerateParametric()
                 PublishPath(user_topic)
 
-            case "Sel":   # Select, push cuurent path through to system
+            case "Sel":      # Select, push cuurent path through to system
                 print("Confirm test case")
 
             case "Pause":    # Pause the current behaviour of the system
                 print("Stop test case")
+
+            case "Resend":   # Resends the current stored path to the visualiser
+                PublishPath(user_topic)
 
 
 ## Math functions
