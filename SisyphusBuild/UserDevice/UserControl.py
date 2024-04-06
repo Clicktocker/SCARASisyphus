@@ -29,7 +29,9 @@ endColour = [59,228,144]   # "#3BE490" in RGB Decimal Values
 
 ## tkinter setup
 
-canvasSize = 1000
+visualiserArea = 800
+controlArea = visualiserArea / 4
+canvasSize = visualiserArea * 1.25
 border = 25
 
 ## Classes
@@ -53,10 +55,9 @@ class lineSegments:
     def __del__(self):
         if self.oval != 0:
             canvas.delete(self.oval)
-        if self.lineBase != 0:
-            canvas.delete(self.lineBase)
-        if self.lineArm != 0:
-            canvas.delete(self.lineArm)
+        if self.line != 0:
+            canvas.delete(self.line)
+ 
         
         
 ## MQTT Connection
@@ -104,8 +105,8 @@ def UserDisplay_Callback(client,userdata,message):
 # Function to convert the cartesian coordinates to screen relative dimensions
 def CartToScreen(x,y):
     global drawArea, canvasSize
-    xout = ( ( (canvasSize/2 - 2*border) ) * (x/drawArea) ) + canvasSize/2
-    yout = ( ( (canvasSize/2 - 2*border) ) * (y/drawArea) ) + canvasSize/2
+    xout = ( ( (visualiserArea/2 - 2*border) ) * (x/drawArea) ) + visualiserArea/2
+    yout = ( ( (visualiserArea/2 - 2*border) ) * (y/drawArea) ) + visualiserArea/2
 
     print("Screen Coords" ,xout,",",yout)
     return xout, yout
@@ -142,6 +143,27 @@ def DrawPoint(xscreen,yscreen, sizeMultiplier):
     r = canvasSize/500 * sizeMultiplier
     return canvas.create_oval( xscreen- r,  yscreen -r, xscreen + r, yscreen + r, outline = 'white', fill='white')
 
+## Interface Functions
+
+def CreateButton(text, callback, relx, rely, widthScale, heightScale):
+    btnWidth = controlArea/5 *widthScale
+    btnHeight = visualiserArea/20 *heightScale
+    # Convert Relative positions to exact control area
+    x = (( 0.8 + (relx * 0.2) ) * canvasSize) - btnWidth/2
+    y = (rely * visualiserArea) - btnHeight/2
+
+    btn = Button(root, text = text, command = callback)
+    btn.place(x=x, y=y, width = btnWidth, height= btnHeight)
+
+    return btn
+
+def ResetDisplay():
+    global drawPath
+    print("Reset Display")
+    drawPath = []
+
+def ResendPattern():
+    client.publish(user_topic, "P,Resend")
 
 
 ## Main Start
@@ -150,11 +172,21 @@ def DrawPoint(xscreen,yscreen, sizeMultiplier):
 root = Tk()
 root.title("User Control Display")
 
-canvas = Canvas(root, bg="#08141a", width = canvasSize, height = canvasSize)
+canvas = Canvas(root, bg="#08141a", width = canvasSize, height = visualiserArea)
 canvas.pack()
 
-canvas.create_oval(border, border, canvasSize-border, canvasSize-border, width=lineThickness, outline='white')
-DrawPoint( canvasSize/2, canvasSize/2, 3)
+# Create draw area and centre point
+canvas.create_oval(border, border, visualiserArea-border, visualiserArea-border, width=lineThickness, outline='white')
+DrawPoint( visualiserArea/2, visualiserArea/2, 3)
+
+# Create user control area
+canvas.create_rectangle(visualiserArea, 0, canvasSize*1.1, visualiserArea*1.1, fill = "#CCE1DF")
+canvas.create_line(visualiserArea, 0, visualiserArea, visualiserArea * 1.1, width = lineThickness, fill='#8CB1BA')
+
+# Create User Buttons
+
+btnReset = CreateButton('Reset Display', ResetDisplay, 1/4, 1/3, 2, 1)
+btnResend = CreateButton('ResendPattern', ResendPattern, 3/4, 1/3, 2, 1)
 
 
 
