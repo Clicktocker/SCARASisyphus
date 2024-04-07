@@ -1,5 +1,6 @@
 import math, time
 import paho.mqtt.client as mqtt
+from fractions import Fraction
 
 ## TEMP VARIABLES
 increment = 0.05     # The resolution of increments in time (t)
@@ -47,19 +48,21 @@ picomms_topic = "PiLocalCommunication"
 
 def UserDisplay_Callback(client,userdata,message):
     msg = str(message.payload.decode("utf-8"))
-    print("Message recieved: ", msg)
+    
 
 
     msgSplit = msg.split(",")
 
     if msgSplit[0] == "P":  # Checking if message is intended for the Pi
         # Handle response based on job type
-
+        print("Message recieved: ", msg)
         match msgSplit[1]:
             case "Rose":   # Case to create a roses
                 print("Rose test case")
-                GenerateRose(int(msgSplit[2]), int(msgSplit[3]))
-                PublishPath(user_topic)
+                if msgSplit[2].isnumeric() and msgSplit[3].isnumeric(): 
+                    GenerateRose(int(msgSplit[2]), int(msgSplit[3]))
+                    PublishPath(user_topic)
+                else: print("Error values entered")
 
 
             case "Liss":     # Generate Lissajous path
@@ -96,9 +99,19 @@ def CartToPolar(x, y):
 
 
 # Function to calculate the joint rotations from the polar coordinates
-def PolarToJoint( angle, magnitude):
-    angleDiff = math.acos( (0.5 * magnitude) / armLength[0])
-    jointBase = angle - angleDiff
+def PolarToJoint( angle, magnitude, prevJointBase):
+    angleDiff = math.acos(magnitude / 2 / armLength[0])
+    prevChange = [abs( prevJointBase - ((angle - angleDiff) % (2*math.pi)) ) , abs( prevJointBase - ((angle + angleDiff) % (2*math.pi)) ) ]
+    
+    for i in range(2):
+        if prevChange[i] > math.pi: prevChange[i] = 2*math.pi - prevChange[i]
+
+    if prevChange[0] < prevChange[1]:
+        jointBase = angle - angleDiff
+    else: 
+        jointBase = angle + angleDiff
+
+
     jointArm = 2 * angleDiff
 
     return jointBase, jointArm
@@ -110,27 +123,43 @@ def PolarToJoint( angle, magnitude):
 # Rose Path Generation
 def GenerateRose(n, d):
     print("Begin Rose generation")
-    global currPath, armLength, increment
+    global currPath
     currPath = []
-
-    for i in range(int(4*math.pi/increment)+2):
-        # Generate x and y coordinates
-        if i == int(simTime/increment)+1: i = 4*math.pi
-        else: i = i*increment
+    k = Fraction(n, d)
+    n = k.numerator; d = k.denominator
+    # Define the period
+    if k % 1 != 0:  # Non-integer values of k
+        if ((n%2 != 0) and (d%2 != 0)) or ((n%2 == 0) and (d%2 == 0)): period = d *math.pi
+        else: period = 2*d*math.pi
         
-        roseCoeff = (drawArea - 5) * math.cos((n/d) * i)
-        x_end = roseCoeff*math.cos(i)
-        y_end = roseCoeff*math.sin(i)
+    else:           # Integer values of k
+        if k%2 != 0: period = math.pi
+        else: period = math.pi * 2
+    
+
+    theta = -increment
+    jointBase=0
+    while theta < period:
+        # Generate x and y coordinates
+        theta = theta + increment
+        if theta > period: theta = period
+        
+        roseCoeff = (drawArea - 5) * math.cos((n/d) * theta)
+        x_end = roseCoeff*math.cos(theta)
+        y_end = roseCoeff*math.sin(theta)
 
         # Convert to polar
         angle, magnitude = CartToPolar(x_end,y_end)
 
         # Calculate the inverse kinematics to get joint rotations
-        jointBase, jointArm = PolarToJoint(angle, magnitude)
+        print("Angle/Magtnitude input is: " , angle , "," , magnitude)
 
+        jointBase, jointArm = PolarToJoint(angle, magnitude, jointBase)
+
+        print("Joint Base Ouput: ", jointBase)
         # Calculate the arm midpoint from the angle and arm length
-        x_mid = math.sin(angle) * armLength[0]
-        y_mid = math.sin(angle) * armLength[0]
+        x_mid = math.sin(jointBase) * armLength[0]
+        y_mid = math.cos(jointBase) * armLength[0]
 
         #Format the calculations into path structure
         pathPoint = pathConstruct(x_end, y_end, x_mid, y_mid, jointBase, jointArm)
@@ -138,6 +167,8 @@ def GenerateRose(n, d):
 
     print("Finished generating rose path")
     print("Length of currPath is: ", len(currPath))
+    print("Period is: ", period/math.pi)
+    print(k)
 
 def GenerateParametric():
     print("Begin Parametric Generation")
