@@ -58,9 +58,8 @@ def UserDisplay_Callback(client,userdata,message):
         print("Message recieved: ", msg)
         match msgSplit[1]:
             case "Rose":   # Case to create a roses
-                print("Rose test case")
-                if msgSplit[2].isnumeric() and msgSplit[3].isnumeric(): 
-                    GenerateRose(int(msgSplit[2]), int(msgSplit[3]))
+                if msgSplit[3].isnumeric() and msgSplit[4].isnumeric(): 
+                    GenerateRose(round(float(msgSplit[2]), 3), int(msgSplit[3]), int(msgSplit[4]))
                     PublishPath(user_topic)
                 else: print("Error values entered")
 
@@ -121,7 +120,7 @@ def PolarToJoint( angle, magnitude, prevJointBase):
 
 
 # Rose Path Generation
-def GenerateRose(n, d):
+def GenerateRose(res, n, d):
     print("Begin Rose generation")
     global currPath
     currPath = []
@@ -136,7 +135,7 @@ def GenerateRose(n, d):
         if k%2 != 0: period = math.pi
         else: period = math.pi * 2
     
-
+    increment = 0.025 * res
     theta = -increment
     jointBase=0
     while theta < period:
