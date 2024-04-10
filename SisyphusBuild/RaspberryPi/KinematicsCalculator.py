@@ -22,6 +22,7 @@ drawArea = 115
 ## System Variables
 
 currPath = []
+pathIndex = []
 
 # Classes
 
@@ -31,8 +32,12 @@ class pathConstruct:
         self.midCoords = [mid_X, mid_Y] # Access end effector coordinates
         self.JointTwists = [jointTwist1, jointTwist2]   # Access joint rotations
 
-    def pubCoords(self, topic):
-        msg = "U,P," + str(self.endCoords[0]) + "," + str(self.endCoords[1]) + "," + str(self.midCoords[0]) + "," + str(self.midCoords[1])
+    def pubCoords(self,identifier, topic):
+        msg = identifier + str(self.endCoords[0]) + "," + str(self.endCoords[1]) + "," + str(self.midCoords[0]) + "," + str(self.midCoords[1])
+        client.publish(topic, msg)
+
+    def pubAll(self, identifier, topic):
+        msg = identifier+str(self.endCoords[0])+","+str(self.endCoords[1])+","+str(self.midCoords[0])+","+str(self.midCoords[1])+","+str(self.JointTwists[0])+","+str(self.JointTwists[1])
         client.publish(topic, msg)
         
         
@@ -48,8 +53,6 @@ picomms_topic = "PiLocalCommunication"
 
 def UserDisplay_Callback(client,userdata,message):
     msg = str(message.payload.decode("utf-8"))
-    
-
 
     msgSplit = msg.split(",")
 
@@ -73,13 +76,19 @@ def UserDisplay_Callback(client,userdata,message):
                 PublishPath(user_topic)
 
             case "Sel":      # Select, push cuurent path through to system
-                print("Confirm test case")
+                print("Confirm select case")
+                SendToSystem()
 
             case "Pause":    # Pause the current behaviour of the system
                 print("Stop test case")
 
             case "Resend":   # Resends the current stored path to the visualiser
-                PublishPath(user_topic)
+                PublishWholePath(user_topic)
+
+            case "Reset":
+                global currPath
+                print("Reset Stored Path")
+                currPath=[]
 
 
 ## Math functions
@@ -122,8 +131,8 @@ def PolarToJoint( angle, magnitude, prevJointBase):
 # Rose Path Generation
 def GenerateRose(res, n, d):
     print("Begin Rose generation")
-    global currPath
-    currPath = []
+    global currPath, pathIndex
+    pathIndex = len(currPath)
     k = Fraction(n, d)
     n = k.numerator; d = k.denominator
     # Define the period
@@ -172,7 +181,6 @@ def GenerateRose(res, n, d):
 def GenerateParametric():
     print("Begin Parametric Generation")
     global currPath, armLength, increment
-    currPath = []
 
     for i in range(int(simTime/increment)):
         # Generate x and y coordinates
@@ -204,10 +212,27 @@ def GenerateParametric():
 def PublishPath(topic):
     client.publish(topic, "U,S")    #Confirm start of path
 
-    for i in range(len(currPath)):  # For each point, publish the coordinates using class function
-        currPath[i].pubCoords(topic)
+    for i in range((len(currPath)) - pathIndex):  # For each point, publish the coordinates using class function
+        i += pathIndex
+        currPath[i].pubCoords("U,P,",topic)
 
     client.publish(topic, "U,F")    #Confirm end of path
+
+
+# Publish Current Path
+def PublishWholePath(topic):
+    client.publish(topic, "U,S")    #Confirm start of path
+
+    for i in range(len(currPath)):  # For each point, publish the coordinates using class function
+        currPath[i].pubCoords("U,P,",topic)
+
+    client.publish(topic, "U,F")    #Confirm end of path
+
+def SendToSystem():
+    client.publish(picomms_topic, "F")  # Notify that the sequence is starting
+    for i in range(len(currPath)):
+        currPath[i].pubAll("P,", picomms_topic)
+    client.publish(picomms_topic, "F")  # Notify that the sequence is finished
 
 
 ## Main Start
