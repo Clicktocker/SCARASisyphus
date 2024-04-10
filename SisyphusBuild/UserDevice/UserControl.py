@@ -143,9 +143,6 @@ def UserDisplay_Callback(client,userdata,message):
                 #Mark the start of the path position in drawPath
 
             case "P":   # Case for path coords being sent
-                #print("Receiving path")
-                #AddDrawPoint(msgSplit)
-                #canvas.after(1, 
                 AddDrawPoint(msgSplit)
                 UpdateArms(msgSplit)
                 delay = 0.001 + 0.005 * (drawRateSlider.value)
@@ -284,15 +281,19 @@ def SendRose(): # Send the values to generate a rose curve to the pi
 def PushToSystem(): # Send the generated pattern to the real system
     client.publish(user_topic, "P,Sel")
 
+def ResendPattern(): # Request the pi to resend the last path
+    client.publish(user_topic, "P,Resend")
+
+def ResetPath(): # Request the pi to delete the stored path and reset the display
+    ResetDisplay()
+    client.publish(user_topic, "P,Reset")
+
 def ResetDisplay(): # Reset the display by deleting the path and arms
     global drawPath, arms
     print("Reset Display")
 
     drawPath.clear()
     arms.clear()
-
-def ResendPattern(): # Request the pi to resend the last path
-    client.publish(user_topic, "P,Resend")
 
 def HidePoints():   # Toggles the visibility of the points on the display
     global pointHide
@@ -334,6 +335,7 @@ canvas.create_line(visualiserArea, 0, visualiserArea, visualiserArea * 1.1, widt
 
 # Create User Buttons
 btnReset = button('Reset Display', ResetDisplay, 1/4, 26/100, 2.5, 20)
+btnClearPath = button('Reset Stored Path', ResetPath, 1/2, 80/100, 1.5, 10 )
 btnResend = button('ResendPattern', ResendPattern, 3/4, 26/100, 2.5, 20)
 btnHidePoints = button('HidePoints', HidePoints, 3/4, 32/100, 2.5, 20)
 btnHideArms = button('HideArms', HideArms, 1/4, 32/100, 2.5, 20)
