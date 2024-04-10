@@ -31,6 +31,7 @@ endColour = [29,36,66]   # "#3BE490" in RGB Decimal Values
 drawTime = 0.001
 
 pointHide = False
+armHide = False
 
 ## tkinter setup
 
@@ -45,20 +46,34 @@ class armStructure:
     def __init__(self, endx, endy, midx, midy, colourIndex):
         self.endx = endx; self.endy = endy
         self.midx = midx; self.midy = midy
+        self.col = colourIndex
 
-        self.armJoint = canvas.create_line(endx, endy, midx, midy, width =lineThickness-1, fill = colArray[colourIndex])
-        self.armBase = canvas.create_line(midx, midy, visualiserArea/2, visualiserArea/2, width =lineThickness-1, fill = colArray[colourIndex])
-        self.centre = DrawPoint(midx, midy, 0.5)
+        self.armJoint = []; self.armBase = []; self.centre = []
+        if armHide == False:
+            self.draw()
+            
         
-    def undraw(self):
-        canvas.delete(self.armBase)
-        canvas.delete(self.armJoint)
-        canvas.delete(self.centre)
+    def draw(self):
+        if self.armJoint == []:
+            self.armJoint = canvas.create_line(self.endx, self.endy, self.midx, self.midy, width =lineThickness-1, fill = colArray[self.col])
+        if self.armBase == []:
+            self.armBase = canvas.create_line(self.midx, self.midy, visualiserArea/2, visualiserArea/2, width =lineThickness-1, fill = colArray[self.col])
+        if self.centre == []:
+            self.centre = DrawPoint(self.midx, self.midy, 0.5)
+
+    def hideArms(self):
+        if self.armJoint != []:
+            canvas.delete(self.armJoint)
+        if self.armBase != []:
+            canvas.delete(self.armBase)
+        if self.centre != []:
+            canvas.delete(self.centre)
 
     def recolour(self, colourIndex):
-        canvas.itemconfigure(self.armJoint, fill = colArray[colourIndex])
-        canvas.itemconfigure(self.armBase, fill = colArray[colourIndex])
-        canvas.itemconfigure(self.centre, fill = colArray[colourIndex])
+        if armHide == False:
+            canvas.itemconfigure(self.armJoint, fill = colArray[colourIndex])
+            canvas.itemconfigure(self.armBase, fill = colArray[colourIndex])
+            canvas.itemconfigure(self.centre, fill = colArray[colourIndex])
 
     def __del__(self):
         if self.centre != 0:
@@ -206,28 +221,28 @@ def DrawPoint(xscreen,yscreen, sizeMultiplier):
 
 ## Interface Functions
 
-def CreateButton(text, callback, relx, rely, widthScale, heightScale):
-    # Convert Relative positions to exact control area
-    sizex = controlArea / widthScale ; sizey = visualiserArea / heightScale
-    x , y = RelToControl(relx, rely)
-    x = x - sizex/2 ; y = y - sizey/2
+class button:
+    def __init__(self, text, callback, relx, rely, widthScale, heightScale):
+        # Convert Relative positions to exact control area
+        sizex = controlArea / widthScale
+        sizey = visualiserArea / heightScale
+        x , y = RelToControl(relx, rely)
+        self.x = x - sizex/2 ; self.y = y - sizey/2
 
-    btn = Button(root, text = text, command = callback)
-    btn.place(x=x, y=y, width = sizex, height= sizey)
+        self.widget = Button(root, text = text, command = callback)
+        self.widget.place(x=self.x, y=self.y, width = sizex, height= sizey)
 
-    return btn
+class entry:
+    def __init__(self, label ,relx , rely , widthScale, heightScale):
+        sizex = controlArea / widthScale ; sizey = visualiserArea / heightScale
+        x , y = RelToControl(relx, rely)
+        self.x = x - sizex/2 ; self.y = y - sizey/2
 
-def CreateEntry(label ,relx , rely , widthScale, heightScale):
-    sizex = controlArea / widthScale ; sizey = visualiserArea / heightScale
-    x , y = RelToControl(relx, rely)
-    x = x - sizex/2 ; y = y - sizey/2
-
-    entry = Entry(root, textvariable = StringVar, justify= CENTER)
-    entry.place(x=x, y=y, width = sizex, height= sizey)
-    Title = Label(root, text=label)
-    Title.place(x = x, y = y - sizey/2, width = sizex, height= sizey/2)
-
-    return entry, Title
+        self.widget = Entry(root, textvariable = StringVar, justify= CENTER)
+        self.widget.place(x=self.x, y=self.y, width = sizex, height= sizey)
+        if label != "":
+            self.title = Label(root, text=label)
+            self.title.place(x = self.x, y = self.y - sizey/2, width = sizex, height= sizey/2)
 
 class slider:
     def __init__(self, label, relx, rely, widthScale, heightScale, min, max):
@@ -240,12 +255,12 @@ class slider:
 
         self.widget = Scale(root, label=label, from_=min, to=max, length=sizex, showvalue=0, tickinterval=2, orient='horizontal', resolution=0.01, command= self.callback)
         self.widget.place(x = self.posx, y = self.posy, width = sizex, height= sizey/2)
-        self.Title = Label(root, text="")
-        self.Title.place(x = self.posx, y = self.posy + sizey/2, width = sizex, height= sizey/4)
+        self.title = Label(root, text="")
+        self.title.place(x = self.posx, y = self.posy + sizey/2, width = sizex, height= sizey/4)
         print("Finished creating slider")
 
     def callback(self, val):    # Update the value of the slider and its text display
-        self.Title.config(text='You have selected: ' + val)
+        self.title.config(text='You have selected: ' + val)
         self.value = float(val)
         # Set value as desired
     
@@ -259,12 +274,15 @@ def RelToControl(x, y):
     
 def SendRose(): # Send the values to generate a rose curve to the pi
     print("Sending Rose Variables")
-    d = entryRosed.get()
-    n = entryRosen.get()
+    d = entryRosed.widget.get()
+    n = entryRosen.widget.get()
     res = str(resolutionSlider.value)
 
     msg = str("P,Rose," + res + "," + n + "," + d)
     client.publish(user_topic, msg)
+
+def PushToSystem(): # Send the generated pattern to the real system
+    client.publish(user_topic, "P,Sel")
 
 def ResetDisplay(): # Reset the display by deleting the path and arms
     global drawPath, arms
@@ -285,6 +303,16 @@ def HidePoints():   # Toggles the visibility of the points on the display
     else:
         for i in range(len(drawPath)):
             drawPath[i].drawPoint()
+
+def HideArms():
+    global armHide
+    armHide = not armHide
+    if armHide == True:
+        for i in range(len(arms)):
+            arms[i].hideArms()
+    else:
+        for i in range(len(arms)):
+            arms[i].draw()
         
 
 ## Main Start
@@ -305,15 +333,16 @@ canvas.create_rectangle(visualiserArea, 0, canvasSize*1.1, visualiserArea*1.1, f
 canvas.create_line(visualiserArea, 0, visualiserArea, visualiserArea * 1.1, width = lineThickness, fill='#8CB1BA')
 
 # Create User Buttons
-
-btnReset = CreateButton('Reset Display', ResetDisplay, 1/4, 26/100, 2.5, 20)
-btnResend = CreateButton('ResendPattern', ResendPattern, 3/4, 26/100, 2.5, 20)
-btnHidePoints = CreateButton('HidePoints', HidePoints, 3/4, 32/100, 2.5, 20)
+btnReset = button('Reset Display', ResetDisplay, 1/4, 26/100, 2.5, 20)
+btnResend = button('ResendPattern', ResendPattern, 3/4, 26/100, 2.5, 20)
+btnHidePoints = button('HidePoints', HidePoints, 3/4, 32/100, 2.5, 20)
+btnHideArms = button('HideArms', HideArms, 1/4, 32/100, 2.5, 20)
+btnSelect = button('Push To System', PushToSystem, 1/2, 65/100, 1.5, 10)
 
 # Create rose n and d entry boxes
-entryRosen, titleRosen  = CreateEntry( "n", 1/12, 1/2, 7, 20)
-entryRosed, titleRosed = CreateEntry( "d", 3/12, 1/2, 7, 20)
-btnRoseSend = CreateButton('Send Rose', SendRose, 3/4, 1/2, 2.5, 20)
+entryRosen  = entry("n", 1/12, 1/2, 7, 20)
+entryRosed = entry("d", 3/12, 1/2, 7, 20)
+btnRoseSend = button('Send Rose', SendRose, 3/4, 1/2, 2.5, 20)
 
 
 
