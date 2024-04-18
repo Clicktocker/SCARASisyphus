@@ -173,8 +173,6 @@ def RGBToHex(r,g,b):
 def AddDrawPoint(msg):
     x, y = CartToScreen(float(msg[2]) , float(msg[3]))
 
-    
-        
     i = len(drawPath)
     segment = lineSegments(x, y, i)
     drawPath.append(segment)
@@ -278,11 +276,26 @@ def SendRose(): # Send the values to generate a rose curve to the pi
     msg = str("P,Rose," + res + "," + n + "," + d)
     client.publish(user_topic, msg)
 
+def SendLissajous():
+    print("Sending lissajous variables")
+    a = entryLissa.widget.get()
+    b = entryLissb.widget.get()
+    delta = entryLissDelta.widget.get()
+    res = str(resolutionSlider.value)
+
+    msg = str("P,Liss," + res + "," + a + "," + b + "," + delta)
+    client.publish(user_topic, msg)
+
 def PushToSystem(): # Send the generated pattern to the real system
+    client.publish(user_topic, "P,ResSel")
+
+def AddToSystem(): # Send the generated pattern to the real system
     client.publish(user_topic, "P,Sel")
 
 def ResendPattern(): # Request the pi to resend the last path
     client.publish(user_topic, "P,Resend")
+
+
 
 def ResetPath(): # Request the pi to delete the stored path and reset the display
     ResetDisplay()
@@ -335,16 +348,23 @@ canvas.create_line(visualiserArea, 0, visualiserArea, visualiserArea * 1.1, widt
 
 # Create User Buttons
 btnReset = button('Reset Display', ResetDisplay, 1/4, 26/100, 2.5, 20)
-btnClearPath = button('Reset Stored Path', ResetPath, 1/2, 80/100, 1.5, 10 )
 btnResend = button('ResendPattern', ResendPattern, 3/4, 26/100, 2.5, 20)
 btnHidePoints = button('HidePoints', HidePoints, 3/4, 32/100, 2.5, 20)
 btnHideArms = button('HideArms', HideArms, 1/4, 32/100, 2.5, 20)
-btnSelect = button('Push To System', PushToSystem, 1/2, 65/100, 1.5, 10)
+btnClearPath = button('Reset Generated Path', ResetPath, 1/2, 65/100, 1.2, 10 )
+btnSelect = button('Reset System + Send Path', PushToSystem, 1/2, 76/100, 1.2, 10)
+btnSelect = button('Add to System Path', AddToSystem, 1/2, 87/100, 1.2, 10)
 
 # Create rose n and d entry boxes
-entryRosen  = entry("n", 1/12, 1/2, 7, 20)
-entryRosed = entry("d", 3/12, 1/2, 7, 20)
-btnRoseSend = button('Send Rose', SendRose, 3/4, 1/2, 2.5, 20)
+entryRosen  = entry("n", 1/12, 55/100, 7, 20)
+entryRosed = entry("d", 3/12, 55/100, 7, 20)
+btnRoseSend = button('Send Rose', SendRose, 3/4, 55/100, 2.5, 20)
+
+# Create Lissajous a, b, and delta entry boxes
+entryLissa  = entry("a", 1/12, 45/100, 7, 20)
+entryLissb  = entry("b", 3/12, 45/100, 7, 20)
+entryLissDelta = entry("delta", 5/12, 45/100, 7, 20)
+btnLissSend = button('Send Lissajous', SendLissajous, 3/4, 45/100, 2.5, 20)
 
 
 
