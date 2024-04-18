@@ -46,7 +46,7 @@ class pathConstruct:
 # Publishers
 mqtt_broker = "localhost"
 user_topic = "UserControlDisplay"
-picomms_topic = "PiLocalCommunication"
+picomms_topic = "PathPublisher"
 
 
 ## Callback Functions
@@ -68,6 +68,9 @@ def UserDisplay_Callback(client,userdata,message):
 
 
             case "Liss":     # Generate Lissajous path
+               
+                GenerateLissajous(round(float(msgSplit[2]), 3), round(float(msgSplit[3]), 2), round(float(msgSplit[4]), 2), float(msgSplit[5]))
+                PublishPath(user_topic)
                 print("Lissajous test case")
 
             case "Para":     # Generate Parametric path
@@ -75,11 +78,15 @@ def UserDisplay_Callback(client,userdata,message):
                 GenerateParametric()
                 PublishPath(user_topic)
 
-            case "Sel":      # Select, push cuurent path through to system
-                print("Confirm select case")
+            case "ResSel":  # Reset Select, reset the system path and add current path
+                client.publish(picomms_topic, "Delete")
+                SendToSystem()
+
+            case "Sel":      # Select, add cuurent path through to system
                 SendToSystem()
 
             case "Pause":    # Pause the current behaviour of the system
+                client.publish(picomms_topic, "Pause")
                 print("Stop test case")
 
             case "Resend":   # Resends the current stored path to the visualiser
@@ -126,6 +133,50 @@ def PolarToJoint( angle, magnitude, prevJointBase):
 
 
 ## Path Generation Functions
+
+# Lissajous Curve Generation
+def GenerateLissajous(res, a, b, delta):
+    global currPath, pathIndex
+    pathIndex = len(currPath)
+    
+    print("a and b are:" , a , "," , b)
+    print("LCM is: " , math.lcm(int(a*100), int(b*100)))
+    a_calc = int(a * 100)
+    b_calc = int(b * 100)
+
+    period = 2*math.pi * math.lcm(int(a_calc),int(b_calc)) / (a * b)
+    period = period/100
+    delta = delta * math.pi
+
+    increment = 0.025 * res
+    theta = -increment
+    jointBase = 0
+    while theta < period:
+        theta = theta + increment
+        if theta> period: theta = period
+
+        x_end = (drawArea) / 1.5 * math.sin((theta * a) + delta)
+        y_end = (drawArea) / 1.5 * math.cos(theta*b)
+
+        # Convert to polar
+        angle, magnitude = CartToPolar(x_end,y_end)
+
+        # Calculate the inverse kinematics to get joint rotations
+        jointBase, jointArm = PolarToJoint(angle, magnitude, jointBase)
+
+        # Calculate the arm midpoint from the angle and arm length
+        x_mid = math.sin(jointBase) * armLength[0]
+        y_mid = math.cos(jointBase) * armLength[0]
+
+        #Format the calculations into path structure
+        pathPoint = pathConstruct(x_end, y_end, x_mid, y_mid, jointBase, jointArm)
+        currPath.append(pathPoint)
+
+    print("Finished generating lissajous")
+    print("Length of currPath is: ", len(currPath))
+    print("Period is: ", period/math.pi)
+
+    pass
 
 
 # Rose Path Generation
@@ -229,7 +280,7 @@ def PublishWholePath(topic):
     client.publish(topic, "U,F")    #Confirm end of path
 
 def SendToSystem():
-    client.publish(picomms_topic, "F")  # Notify that the sequence is starting
+    client.publish(picomms_topic, "S")  # Notify that the sequence is starting
     for i in range(len(currPath)):
         currPath[i].pubAll("P,", picomms_topic)
     client.publish(picomms_topic, "F")  # Notify that the sequence is finished
