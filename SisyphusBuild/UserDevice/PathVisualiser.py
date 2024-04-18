@@ -131,6 +131,7 @@ def RTVisualiser_Callback(client,userdata,message):
     drawPath.append(segment)
     UpdateArms(dataPoints[drawIndex].endx, dataPoints[drawIndex].endy, dataPoints[drawIndex].midx, dataPoints[drawIndex].midy)
     drawIndex += 1
+    dataPoints.pop(0)
 
 
 def PathPublisher_Callback(client,userdata,message):
@@ -154,11 +155,8 @@ def PathPublisher_Callback(client,userdata,message):
             print("Appended Data")
 
         case "Delete":
-            dataPoints.clear()
             ResetDisplay()
-            drawPath.clear()
-            arms.clear()
-            drawIndex = 0
+            dataPoints.clear()
             
 
 ## Functions
@@ -238,11 +236,12 @@ def RelToPixel(x, y):
     return conx, cony
 
 def ResetDisplay(): # Reset the display by deleting the path and arms
-    global drawPath, arms
+    global drawPath, arms, drawIndex
     print("Reset Display")
 
     drawPath.clear()
     arms.clear()
+    drawIndex = 0
 
 def HidePoints():   # Toggles the visibility of the points on the display
     global pointHide
