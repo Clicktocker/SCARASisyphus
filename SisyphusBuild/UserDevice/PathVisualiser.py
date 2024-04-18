@@ -25,6 +25,7 @@ buffSize = 5    # Size of buffer for number of arms drawn
 startColour = [136,64,66]   # "#05743C" in RGB Decimal Values
 endColour = [29,36,66]   # "#3BE490" in RGB Decimal Values
 drawIndex = 0
+dataIndex = 0
 
 drawTime = 0.001
 
@@ -84,7 +85,7 @@ class lineSegment:
     def __init__(self, x, y, index):
         self.x = x; self.y = y
         try:
-            pastx = drawPath[index-1].x
+            pastx = drawPath[index -1].x
             pasty = drawPath[index -1].y
         except:
             pastx = self.x; pasty = self.y
@@ -126,37 +127,39 @@ visualiser_topic = "RTVisualiser"
 ## Callback Functions
 
 def RTVisualiser_Callback(client,userdata,message):
-    global drawIndex
-    segment = lineSegment(dataPoints[drawIndex].endx, dataPoints[drawIndex].endy, drawIndex)
-    drawPath.append(segment)
-    UpdateArms(dataPoints[drawIndex].endx, dataPoints[drawIndex].endy, dataPoints[drawIndex].midx, dataPoints[drawIndex].midy)
-    drawIndex += 1
-    dataPoints.pop(0)
+    global drawIndex, dataIndex
+    try:
+        segment = lineSegment(dataPoints[dataIndex].endx, dataPoints[dataIndex].endy, drawIndex)
+        drawPath.append(segment)
+        UpdateArms(dataPoints[dataIndex].endx, dataPoints[dataIndex].endy, dataPoints[dataIndex].midx, dataPoints[drawIndex].midy)
+        drawIndex += 1
+        dataIndex += 1
+    except:
+        pass
 
 
 def PathPublisher_Callback(client,userdata,message):
-    global drawIndex
+    global dataIndex
     msg = str(message.payload.decode("utf-8"))
     msgSplit = msg.split(",")
 
     match msgSplit[0]:
-        case "S": # Start of a sequence
-            pass        
+        case "S": #Starting line
+            print("Starting points Points, current size of path is: " , len(dataPoints))
 
-        case "F": # End of a sequence
-            pass    
-
+        case "F": #Finished line
+            print("Finish Points, current size of path is: " , len(dataPoints))
         case "P": # Point Data
             # Add points to the stored list
             endx, endy = CartToScreen(float(msgSplit[1]), float(msgSplit[2]))
             midx, midy = CartToScreen(float(msgSplit[3]), float(msgSplit[4]))
             struc = PointDataStore(endx, endy, midx, midy)
             dataPoints.append(struc)
-            print("Appended Data")
 
         case "Delete":
             ResetDisplay()
             dataPoints.clear()
+            dataIndex = 0
             
 
 ## Functions
