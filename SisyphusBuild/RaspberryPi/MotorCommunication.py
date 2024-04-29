@@ -108,7 +108,7 @@ def ArdConfirm():
 ## Main Start
 
 # Connecting to Serial
-port = serial.Serial("/dev/tty/USB0", baudrate = 7200, timeout = 2)
+port = serial.Serial("/dev/ttyUSB0", baudrate = 7200, timeout = 2)
 
 # Connecting to MQTT
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
