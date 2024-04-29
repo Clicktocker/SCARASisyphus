@@ -18,14 +18,15 @@ lineThickness = 4
 arms = []       # List for arms to be stored in
 drawPath = []   # List for the drawn path to be stored in
 colArray = []
-dataPoints = [] # List for storing the coordinate data to be drawn
+
 
 buffSize = 5    # Size of buffer for number of arms drawn
 
-startColour = [136,64,66]   # "#05743C" in RGB Decimal Values
-endColour = [29,36,66]   # "#3BE490" in RGB Decimal Values
+startColour = [29,36,66]  # "#3BE490" in RGB Decimal Values 
+endColour =  [136,64,66]  # "#05743C" in RGB Decimal Values
 drawIndex = 0
 dataIndex = 0
+showFuture = False
 
 drawTime = 0.001
 
@@ -82,37 +83,42 @@ class armStructure:
 
 
 class lineSegment:
-    def __init__(self, x, y, index):
-        self.x = x; self.y = y
-        try:
-            pastx = drawPath[index -1].x
-            pasty = drawPath[index -1].y
-        except:
-            pastx = self.x; pasty = self.y
-
-        self.line = canvas.create_line(self.x, self.y, pastx, pasty, width=lineThickness-1, fill='green')
-        
-        if pointHide == False:
-            self.oval = DrawPoint(self.x, self.y,0.8)
-        else: self.oval = []
-
-    def __del__(self):
-        if self.oval != 0:
-            canvas.delete(self.oval)
-        if self.line != 0:
-            canvas.delete(self.line)
-    def hidePoint(self):
-        if self.oval != 0:
-            canvas.delete(self.oval)
-            self.oval = []
-    def drawPoint(self):
-        if self.oval == []:
-            self.oval = DrawPoint(self.x, self.y,0.8)
-
-class PointDataStore:
-    def __init__(self, endx, endy, midx, midy):
+    def __init__(self, endx, endy, midx, midy, index):
         self.endx = endx; self.endy = endy
         self.midx = midx; self.midy = midy
+        try:
+            self.pastx = drawPath[index -1].endx
+            self.pasty = drawPath[index -1].endy
+        except:
+            self.pastx = self.endx; self.pasty = self.endy
+        self.oval = []
+
+    def drawLine(self, colour):
+        self.line = canvas.create_line(self.endx, self.endy, self.pastx, self.pasty, width=lineThickness-1, fill= colour)
+        
+        if pointHide == False:
+            self.oval = DrawPoint(self.endx, self.endy,0.8)
+        else: self.oval = []
+
+    def deleteLine(self):
+        try: canvas.delete(self.line)
+        except: pass
+
+
+    def __del__(self):
+        try: canvas.delete(self.oval)
+        except: pass
+
+        try: canvas.delete(self.line)
+        except: pass
+
+    def hidePoint(self):
+        try: canvas.delete(self.oval); self.oval = []
+        except: pass
+
+    def drawPoint(self):
+        if self.oval == []:
+            self.oval = DrawPoint(self.endx, self.endy,0.8)
  
         
 
@@ -127,15 +133,13 @@ visualiser_topic = "RTVisualiser"
 ## Callback Functions
 
 def RTVisualiser_Callback(client,userdata,message):
-    global drawIndex, dataIndex
+    global drawIndex
     try:
-        segment = lineSegment(dataPoints[dataIndex].endx, dataPoints[dataIndex].endy, drawIndex)
-        drawPath.append(segment)
-        UpdateArms(dataPoints[dataIndex].endx, dataPoints[dataIndex].endy, dataPoints[dataIndex].midx, dataPoints[drawIndex].midy)
+        drawPath[drawIndex].deleteLine()
+        drawPath[drawIndex].drawLine('green')
+        UpdateArms(drawPath[drawIndex].endx, drawPath[drawIndex].endy, drawPath[drawIndex].midx, drawPath[drawIndex].midy)
         drawIndex += 1
-        dataIndex += 1
-    except:
-        pass
+    except: pass
 
 
 def PathPublisher_Callback(client,userdata,message):
@@ -145,20 +149,21 @@ def PathPublisher_Callback(client,userdata,message):
 
     match msgSplit[0]:
         case "S": #Starting line
-            print("Starting points Points, current size of path is: " , len(dataPoints))
+            print("Starting points Points, current size of path is: " , len(drawPath))
 
         case "F": #Finished line
-            print("Finish Points, current size of path is: " , len(dataPoints))
+            print("Finish Points, current size of path is: " , len(drawPath))
         case "P": # Point Data
             # Add points to the stored list
             endx, endy = CartToScreen(float(msgSplit[1]), float(msgSplit[2]))
             midx, midy = CartToScreen(float(msgSplit[3]), float(msgSplit[4]))
-            struc = PointDataStore(endx, endy, midx, midy)
-            dataPoints.append(struc)
+            struc = lineSegment(endx, endy, midx, midy, dataIndex)
+            drawPath.append(struc)
+            dataIndex += 1
 
         case "Delete":
             ResetDisplay()
-            dataPoints.clear()
+            drawPath.clear()
             dataIndex = 0
             
 
@@ -242,18 +247,22 @@ def ResetDisplay(): # Reset the display by deleting the path and arms
     global drawPath, arms, drawIndex
     print("Reset Display")
 
-    drawPath.clear()
+    for i in range(drawIndex):
+        drawPath.pop(0)
     arms.clear()
     drawIndex = 0
 
 def HidePoints():   # Toggles the visibility of the points on the display
     global pointHide
     pointHide = not pointHide
+    if showFuture == True: target = len(drawPath)
+    else: target = (drawIndex)
+
     if pointHide == True:
-        for i in range(len(drawPath)):
+        for i in range(target):
             drawPath[i].hidePoint()
     else:
-        for i in range(len(drawPath)):
+        for i in range(target):
             drawPath[i].drawPoint()
 
 def HideArms():
@@ -265,8 +274,21 @@ def HideArms():
     else:
         for i in range(len(arms)):
             arms[i].draw()
-        
 
+def ToggleFuture():
+    global showFuture, drawIndex
+    print("Current Draw Index: ", drawIndex)
+    print("Current length of drawpath: ", len(drawPath))
+    showFuture = not showFuture
+    if showFuture == True:
+        for i in range(len(drawPath) - drawIndex):
+            drawPath[i + drawIndex].drawLine('red')
+    else:
+        for i in range(len(drawPath) - drawIndex):
+            drawPath[i + drawIndex].deleteLine()
+            drawPath[i + drawIndex].hidePoint()
+
+        
 ## Main Start
 
 # Create base UI
@@ -284,6 +306,8 @@ DrawPoint( visualiserArea/2, visualiserArea/2, 3)
 btnReset = button('Reset Display', ResetDisplay, 9/10, 3/100, 5, 20)
 btnHidePoints = button('HidePoints', HidePoints, 6/100, 3/100, 10, 20)
 btnHideArms = button('HideArms', HideArms, 16/100, 3/100, 10, 20)
+btnToggleFuture = button('Toggle Future', ToggleFuture, 6/100, 8/100, 10, 20)
+
 
 # Connecting to MQTT
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
