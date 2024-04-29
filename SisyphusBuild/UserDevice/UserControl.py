@@ -25,8 +25,8 @@ colArray = []
 
 buffSize = 5    # Size of buffer for number of arms drawn
 
-startColour = [136,64,66]   # "#05743C" in RGB Decimal Values
-endColour = [29,36,66]   # "#3BE490" in RGB Decimal Values
+startColour = [29,36,66]   # "#3BE490" in RGB Decimal Values
+endColour =  [136,64,66]   # "#05743C" in RGB Decimal Values
 
 drawTime = 0.001
 
