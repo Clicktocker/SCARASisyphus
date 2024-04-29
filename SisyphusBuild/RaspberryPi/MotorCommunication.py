@@ -85,31 +85,35 @@ def PiCommsCallback(client,userdata,message):
 
 def USBRead():
     while (1):
-        input = port.read() # Read next character
-        if input == "C":    # Check if a confirmation message
-            ArdConfirm()
-            input = ""
+        if port.inWaiting() > 0:
+            input = str(port.readline()) # Read next character
+            input = input[ 2 : (len(input) - 3)]
+            print("Read on Serial: ", input)
+            if input == "C":    # Check if a confirmation message
+                ArdConfirm()
+                input = ""
 
 
 def ArdConfirm():
-    #global commandList
-    #if len(commandList > 2):
-    #    # Send next point if one is available and not on pause
-    #    while pause == False:
-    #        commandList[2].PubUSB()
+    global commandList
+    if len(commandList > 2):
+        # Send next point if one is available and not on pause
+        while pause == False:
+            commandList[2].PubUSB()
 
-    #if commandList[0] != []:
-    #    # Send coords to visualiser
-    #    commandList[0].pubVisualiserComms()
-    #    # Delete the completed task
-    #    commandList[0].pop
-    print("Test Received!")
+    if commandList[0] != []:
+        # Send coords to visualiser
+        commandList[0].pubVisualiserComms()
+        # Delete the completed task
+        commandList[0].pop
+
+    port.write('TestFromPython\n')
 
 
 ## Main Start
 
 # Connecting to Serial
-port = serial.Serial("/dev/ttyUSB0", baudrate = 7200, timeout = 2)
+port = serial.Serial("/dev/ttyUSB0", baudrate = 9600, timeout = 2)
 
 # Connecting to MQTT
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
