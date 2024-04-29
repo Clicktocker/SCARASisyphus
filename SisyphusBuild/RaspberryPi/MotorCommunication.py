@@ -37,7 +37,7 @@ class pointConstruct:
 
 # Broker and Topics
 mqtt_broker = "localhost"
-picomms_topic = "PiLocalCommunication"
+picomms_topic = "PathPublisher"
 visualiser_topic = "RTVisualiser"
 
 
@@ -77,7 +77,7 @@ def PiCommsCallback(client,userdata,message):
 
         case "Delete":  # Clear the current command list for the arduino
             global CommandList
-            CommandList = []
+            CommandList.clear()
 
 
 
@@ -108,7 +108,7 @@ def ArdConfirm():
 ## Main Start
 
 # Connecting to Serial
-port = serial.Serial("/dev/tty/AMA0", baudrate = 7200, timeout = 2)
+port = serial.Serial("/dev/tty/USB0", baudrate = 7200, timeout = 2)
 
 # Connecting to MQTT
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
