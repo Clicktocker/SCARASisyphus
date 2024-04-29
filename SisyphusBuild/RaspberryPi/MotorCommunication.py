@@ -92,17 +92,18 @@ def USBRead():
 
 
 def ArdConfirm():
-    global commandList
-    if len(commandList > 2):
-        # Send next point if one is available and not on pause
-        while pause == False:
-            commandList[2].PubUSB()
+    #global commandList
+    #if len(commandList > 2):
+    #    # Send next point if one is available and not on pause
+    #    while pause == False:
+    #        commandList[2].PubUSB()
 
-    if commandList[0] != []:
-        # Send coords to visualiser
-        commandList[0].pubVisualiserComms()
-        # Delete the completed task
-        commandList[0].pop
+    #if commandList[0] != []:
+    #    # Send coords to visualiser
+    #    commandList[0].pubVisualiserComms()
+    #    # Delete the completed task
+    #    commandList[0].pop
+    print("Test Received!")
 
 
 ## Main Start
@@ -118,6 +119,7 @@ client.connect(mqtt_broker) # Connect to the broker
 
 print("Subscribing to topic: ", picomms_topic)
 client.subscribe(picomms_topic)
+client.publish(visualiser_topic, "Test!")
 
 client.loop_start()
 
@@ -127,5 +129,5 @@ client.loop_start()
 #client.publish(user_topic, "P,Rose,2,1")
 
 while(1):
-    USBRead(port)
+    USBRead()
     time.sleep(1)
