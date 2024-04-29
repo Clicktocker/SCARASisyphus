@@ -91,23 +91,25 @@ def USBRead():
             print("Read on Serial: ", input)
             if input == "C":    # Check if a confirmation message
                 ArdConfirm()
-                input = ""
 
 
 def ArdConfirm():
     global commandList
-    if len(commandList > 2):
+    if len(commandList) > 2:
         # Send next point if one is available and not on pause
         while pause == False:
             commandList[2].PubUSB()
 
-    if commandList[0] != []:
-        # Send coords to visualiser
-        commandList[0].pubVisualiserComms()
-        # Delete the completed task
-        commandList[0].pop
-
-    port.write('TestFromPython\n')
+    try:
+        if commandList[0] != []:
+            # Send coords to visualiser
+            commandList[0].pubVisualiserComms()
+            # Delete the completed task
+            commandList[0].pop
+    except:
+        pass
+    msg = "TestFromPython\n"
+    port.write(msg.encode())
 
 
 ## Main Start
