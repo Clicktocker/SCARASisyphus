@@ -54,9 +54,8 @@ void loop() {
       MessageHandler(message);
     }  
   }
-  delay(50);
   if ((moveStatus == true) && (targetSteps[0] != -1)){
-    StepsControl(targetSteps[0], targetSteps[1], 1500);
+    StepsControl(targetSteps[0], targetSteps[1], 1000);
   }
 }
 
@@ -65,7 +64,7 @@ void MessageHandler(char msg[50]){
   // Respond to Message type
   switch (msg[0]) {
     case 'T':{ // Target
-      // Add target point into buffer slot and act on the first point
+      // Add target point into buffer slot and open movement access
       strtok(msg, ":");
       char *targetBase = strtok(NULL, ",");
       char *targetArm = strtok(NULL, ",");
@@ -94,11 +93,6 @@ void MessageHandler(char msg[50]){
     }
     case 'D':{ // Delete
       // Remove the currently stored targets
-      break;
-    }
-    case 'P':{ // Pause
-      // Enter waiting function until getting a resume command
-      moveStatus = !moveStatus;
       break;
     }
     default:{ // Back up response
@@ -198,4 +192,9 @@ void StepsControl(int stepsBase, int stepsJoint, int timeDelay)
         
       }
     }
+    // Shifting position store buffer and confirming completion
+    targetSteps[0] = targetSteps[2];
+    targetSteps[1] = targetSteps[3];
+    targetSteps[2] = -1; targetSteps[3] = -1;
+    Serial.write("C\n");
   }

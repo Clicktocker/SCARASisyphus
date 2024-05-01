@@ -11,7 +11,7 @@ import paho.mqtt.client as mqtt
 commandList = []
 pathIndex = []
 pause = False
-firstPoint = True
+ardWork = 0
 
 # Classes
 
@@ -22,9 +22,9 @@ class pointConstruct:
         self.twistBase = twistBase
         self.twistJoint = twistJoint
 
-    def pubUSB(self):
-        msg = "P," + str(self.twistBase) + "," + str(self.twistJoint)
-        port.write(msg)
+    def pubUSB(self, startChar):
+        msg = startChar + ":" + str(self.twistBase) + "," + str(self.twistJoint)
+        port.write(msg.encode())
         # Send to the arduino
 
     def pubVisualiserComms(self):   # Send to MQTT comms for the real time visualiser
@@ -44,7 +44,7 @@ visualiser_topic = "RTVisualiser"
 ## Callback Functions
 
 def PiCommsCallback(client,userdata,message):
-    global firstPoint, pause 
+    global pause 
     msg = str(message.payload.decode("utf-8"))
 
     msgSplit = msg.split(",")
@@ -56,13 +56,7 @@ def PiCommsCallback(client,userdata,message):
             if len(commandList) == 0:
                 firstPoint = True
             print("Path Starting")
-            pass
-        case "F": # Finished sending a path
-            if firstPoint == True:
-                firstPoint = False
-                # Call USB Comm for first 2 points
-                commandList[0].pubUSB()
-                commandList[1].pubUSB()          
+            pass         
 
         case "P":   # Incoming Point for the Arduino
             # Split message and append to the list
@@ -84,13 +78,12 @@ def PiCommsCallback(client,userdata,message):
 ## Other Functions
 
 def USBRead():
-    while (1):
-        if port.inWaiting() > 0:
-            input = str(port.readline()) # Read next character
-            input = input[ 2 : (len(input) - 3)]
-            print("Read on Serial: ", input)
-            if input == "C":    # Check if a confirmation message
-                ArdConfirm()
+    if port.inWaiting() > 0:
+        input = str(port.readline()) # Read next character
+        input = input[ 2 : (len(input) - 3)]
+        print("Read on Serial: ", input)
+        if input == "C":    # Check if a confirmation message
+            ArdConfirm()
 
 
 def ArdConfirm():
@@ -98,7 +91,7 @@ def ArdConfirm():
     if len(commandList) > 2:
         # Send next point if one is available and not on pause
         while pause == False:
-            commandList[2].PubUSB()
+            commandList[2].PubUSB("T")
 
     try:
         if commandList[0] != []:
@@ -137,3 +130,19 @@ client.loop_start()
 while(1):
     USBRead()
     time.sleep(1)
+    if len(commandList) > ardWork:
+        if ardWork == 0 and len(commandList) > 1:
+            commandList[0].pubUBS("I")
+            ardWork += 1
+        elif ardWork == 1 and len(commandList) > 1:
+            commandList[1].pubUSB("T")
+            ardWork += 1
+
+
+
+
+
+
+    
+
+    
