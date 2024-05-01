@@ -50,13 +50,7 @@ def PiCommsCallback(client,userdata,message):
     msgSplit = msg.split(",")
        
     print("Message recieved: ", msg)
-    match msgSplit[0]:
-        case "S": # Starting sending a path
-            # If no current path then send the first point
-            if len(commandList) == 0:
-                firstPoint = True
-            print("Path Starting")
-            pass         
+    match msgSplit[0]:     
 
         case "P":   # Incoming Point for the Arduino
             # Split message and append to the list
@@ -87,12 +81,7 @@ def USBRead():
 
 
 def ArdConfirm():
-    global commandList
-    if len(commandList) > 2:
-        # Send next point if one is available and not on pause
-        while pause == False:
-            commandList[2].PubUSB("T")
-
+    global commandList, ardWork
     try:
         if commandList[0] != []:
             # Send coords to visualiser
@@ -101,8 +90,7 @@ def ArdConfirm():
             commandList[0].pop
     except:
         pass
-    msg = "TestFromPython\n"
-    port.write(msg.encode())
+    ardWork -= 1
 
 
 ## Main Start
@@ -129,10 +117,9 @@ client.loop_start()
 
 while(1):
     USBRead()
-    time.sleep(1)
-    if len(commandList) > ardWork:
+    if len(commandList) > ardWork and pause != True:
         if ardWork == 0 and len(commandList) > 1:
-            commandList[0].pubUBS("I")
+            commandList[0].pubUSB("I")
             ardWork += 1
         elif ardWork == 1 and len(commandList) > 1:
             commandList[1].pubUSB("T")
