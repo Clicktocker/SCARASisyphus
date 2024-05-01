@@ -65,7 +65,7 @@ def PiCommsCallback(client,userdata,message):
 
         case "Delete":  # Clear the current command list for the arduino
             global CommandList
-            CommandList.clear()
+            commandList.clear()
 
 
 
@@ -118,10 +118,13 @@ client.loop_start()
 while(1):
     USBRead()
     if len(commandList) > ardWork and pause != True:
+
         if ardWork == 0 and len(commandList) > 1:
+            print("Sending 1 of 2 points")
             commandList[0].pubUSB("I")
             ardWork += 1
         elif ardWork == 1 and len(commandList) > 1:
+            print("Sending second point")
             commandList[1].pubUSB("T")
             ardWork += 1
 
