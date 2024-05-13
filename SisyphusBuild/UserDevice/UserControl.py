@@ -118,6 +118,7 @@ class lineSegments:
 ## MQTT Connection
 
 # Publishers
+mqtt_broker = "192.168.0.193"
 mqtt_broker = "localhost"
 user_topic = "UserControlDisplay"
 
@@ -370,7 +371,7 @@ btnLissSend = button('Send Lissajous', SendLissajous, 3/4, 45/100, 2.5, 20)
 
 # Creating Sliders
 drawRateSlider = slider("Draw Speed", 1/2, 1/10, 1.05, 10, 0, 10)
-resolutionSlider = slider("Point Resolution (1x to 20x)", 1/2, 2/10, 1.05, 10, 1, 20)
+resolutionSlider = slider("Point Resolution (1x to 10x)", 1/2, 2/10, 1.05, 10, 2, 20)
 
 
 # Connecting to MQTT

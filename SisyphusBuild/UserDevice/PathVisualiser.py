@@ -125,6 +125,7 @@ class lineSegment:
 ## MQTT Connection
 
 # Publishers
+mqtt_broker = "192.168.0.193"
 mqtt_broker = "localhost"
 picomms_topic = "PathPublisher"
 visualiser_topic = "RTVisualiser"
@@ -293,7 +294,7 @@ def ToggleFuture():
 
 # Create base UI
 root = Tk()
-root.title("Real Time Sisyphus Visualiser")
+root.title("Real Time Visualiser")
 
 canvas = Canvas(root, bg="#08141a", width = visualiserArea, height = visualiserArea)
 canvas.pack()
