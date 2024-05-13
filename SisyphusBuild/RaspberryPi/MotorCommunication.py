@@ -1,4 +1,4 @@
-import time, serial
+import time, serial, math
 import paho.mqtt.client as mqtt
 
 ## Eoin Brennan Motor Communicator for Sisyphus System
@@ -17,10 +17,10 @@ ardWork = 0
 
 class pointConstruct:
     def __init__(self, endx, endy, midx, midy, twistBase, twistJoint):
-        self.endx = endx; self.ebdy = endy
+        self.endx = endx; self.endy = endy
         self.midx = midx; self.midy = midy
-        self.twistBase = twistBase
-        self.twistJoint = twistJoint
+        self.twistBase = round( twistBase * 180 / (1.8 *math.pi))
+        self.twistJoint = round( twistJoint * 180 / (1.8 *math.pi))
 
     def pubUSB(self, startChar):
         msg = startChar + ":" + str(self.twistBase) + "," + str(self.twistJoint)
@@ -82,14 +82,13 @@ def USBRead():
 
 def ArdConfirm():
     global commandList, ardWork
-    try:
-        if commandList[0] != []:
-            # Send coords to visualiser
-            commandList[0].pubVisualiserComms()
-            # Delete the completed task
-            commandList[0].pop
-    except:
-        pass
+    
+    
+    # Send coords to visualiser
+    commandList[0].pubVisualiserComms()
+    # Delete the completed task
+    commandList.pop(0)
+
     ardWork -= 1
 
 
@@ -114,7 +113,7 @@ client.loop_start()
 
 # Test Message for Rose Generation
 #client.publish(user_topic, "P,Rose,2,1")
-
+time.sleep(20)
 while(1):
     USBRead()
     if len(commandList) > ardWork and pause != True:
@@ -127,7 +126,6 @@ while(1):
             print("Sending second point")
             commandList[1].pubUSB("T")
             ardWork += 1
-
 
 
 
