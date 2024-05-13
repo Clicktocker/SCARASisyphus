@@ -16,7 +16,7 @@ simTime = 4*math.pi      # Time length for system to draw
 
 ## User Variables
 
-armLength = [57.5, 57.5]
+armLength = [55, 55]
 drawArea = 115 
 
 ## System Variables
@@ -219,6 +219,7 @@ def GenerateRose(res, n, d):
         # Calculate the arm midpoint from the angle and arm length
         x_mid = math.sin(jointBase) * armLength[0]
         y_mid = math.cos(jointBase) * armLength[0]
+        
 
         #Format the calculations into path structure
         pathPoint = pathConstruct(x_end, y_end, x_mid, y_mid, jointBase, jointArm)
