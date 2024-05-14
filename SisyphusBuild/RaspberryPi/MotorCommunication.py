@@ -80,6 +80,7 @@ def PiCommsCallback(client,userdata,message):
 def USBRead():
     if port.inWaiting() > 0:
         input = str(port.readline()) # Read next character
+        input = input[ 2 : (len(input) - 3)] # Removing byte character and new line characters from message
         print("Read on Serial: ", input)
         if input == "C":    # Check if a confirmation message
             ArdConfirm()
@@ -114,10 +115,6 @@ client.publish(visualiser_topic, "Test!")
 
 client.loop_start()
 
-
-
-# Test Message for Rose Generation
-#client.publish(user_topic, "P,Rose,2,1")
 time.sleep(20)
 while(1):
     USBRead()
@@ -132,10 +129,4 @@ while(1):
             commandList[1].pubUSB("T")
             ardWork += 1
 
-
-
-
-
-    
-
-    
+   
