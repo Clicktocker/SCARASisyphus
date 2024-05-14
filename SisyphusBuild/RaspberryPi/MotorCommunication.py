@@ -22,8 +22,14 @@ class pointConstruct:
         self.twistBase = round( twistBase * 180 / (1.8 *math.pi))
         self.twistJoint = round( twistJoint * 180 / (1.8 *math.pi))
 
+        if self.twistBase < 0: self.twistBase += 400
+        elif self.twistBase > 400: self.twistBase -= 400
+
+        if self.twistJoint < 0: self.twistBase += 400
+        elif self.twistJoint > 400: self.twistBase -= 400
+
     def pubUSB(self, startChar):
-        msg = startChar + ":" + str(self.twistBase) + "," + str(self.twistJoint)
+        msg = startChar + ":" + str(self.twistBase) + "," + str(self.twistJoint) + "\n"
         port.write(msg.encode())
         # Send to the arduino
 
@@ -74,7 +80,6 @@ def PiCommsCallback(client,userdata,message):
 def USBRead():
     if port.inWaiting() > 0:
         input = str(port.readline()) # Read next character
-        input = input[ 2 : (len(input) - 3)]
         print("Read on Serial: ", input)
         if input == "C":    # Check if a confirmation message
             ArdConfirm()
