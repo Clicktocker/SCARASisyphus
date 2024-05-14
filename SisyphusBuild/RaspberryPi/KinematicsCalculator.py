@@ -300,6 +300,8 @@ client.subscribe(user_topic)
 
 client.loop_start()
 
+client.publish(user_topic, 'BootedUp')
+
 # Test Message for Rose Generation
 #client.publish(user_topic, "P,Rose,2,1")
 
