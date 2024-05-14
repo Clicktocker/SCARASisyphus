@@ -55,12 +55,12 @@ def PiCommsCallback(client,userdata,message):
 
     msgSplit = msg.split(",")
        
-    print("Message recieved: ", msg)
+    #print("Message recieved: ", msg)
     match msgSplit[0]:     
 
         case "P":   # Incoming Point for the Arduino
             # Split message and append to the list
-            print("Added to Command List")
+            #print("Added to Command List")
             struc = pointConstruct(float(msgSplit[1]), float(msgSplit[2]), float(msgSplit[3]), float(msgSplit[4]), float(msgSplit[5]), float(msgSplit[6]))
             commandList.append(struc)
             pass
