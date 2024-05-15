@@ -6,6 +6,8 @@ import paho.mqtt.client as mqtt
 
 # Graphical Interface that displays the current behaviour of the physical system.
 
+mqtt_broker = "192.168.184.184"
+
 ## User Variables
 
 armLength = [57.5, 57.5]
@@ -97,6 +99,8 @@ class lineSegment:
         self.line = canvas.create_line(self.endx, self.endy, self.pastx, self.pasty, width=lineThickness-1, fill= colour)
         
         if pointHide == False:
+            try: canvas.delete(self.oval); self.oval = []
+            except: pass
             self.oval = DrawPoint(self.endx, self.endy,0.8)
         else: self.oval = []
 
@@ -117,16 +121,16 @@ class lineSegment:
         except: pass
 
     def drawPoint(self):
-        if self.oval == []:
-            self.oval = DrawPoint(self.endx, self.endy,0.8)
+        try: canvas.delete(self.oval); self.oval = []
+        except: pass
+        self.oval = DrawPoint(self.endx, self.endy,0.8)
  
         
 
 ## MQTT Connection
 
 # Publishers
-mqtt_broker = "192.168.0.193"
-mqtt_broker = "localhost"
+#mqtt_broker = "localhost"
 picomms_topic = "PathPublisher"
 visualiser_topic = "RTVisualiser"
 

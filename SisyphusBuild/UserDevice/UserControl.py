@@ -10,6 +10,8 @@ import paho.mqtt.client as mqtt
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
+mqtt_broker = "192.168.184.184"
+
 ## User Variables
 
 armLength = [57.5, 57.5]
@@ -118,8 +120,7 @@ class lineSegments:
 ## MQTT Connection
 
 # Publishers
-mqtt_broker = "192.168.0.193"
-mqtt_broker = "localhost"
+#mqtt_broker = "localhost"
 user_topic = "UserControlDisplay"
 
 

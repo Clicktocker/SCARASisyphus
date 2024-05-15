@@ -10,6 +10,7 @@ Arduino Motor Control system taking inputs from raspberry pi through USB serial
 const int baseSensor = A0;
 const int endSensor = A1;
 
+
 // Setting motor control Variables
 int currSteps[2] = {0,0};
 int targetSteps[4] = {-1,-1,-1,-1};
@@ -29,11 +30,14 @@ void setup() {
   // Setting Hall Effect Sensors
   pinMode(baseSensor, INPUT);
   pinMode(endSensor, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
   stepperBase.setSpeed(10);
+  stepperJoint.setSpeed(10);
   Serial.begin(9600);
   //stepperBase.step(100);
   stepperJoint.step(20);
   //HomeRoutine();
+  TestHoming();
 }
 
 void loop() {
@@ -42,7 +46,7 @@ void loop() {
     // Read next character from serial and respond
     char in = Serial.read();
     if (in != '\n') {
-      // Add reading onto message list
+      // Add reading onto message list 
       message[pos] = in;
       pos++;
     }
@@ -54,7 +58,14 @@ void loop() {
     }  
   }
   if ((moveStatus == true) && (targetSteps[0] != -1)){
-    StepsControl(targetSteps[0], targetSteps[1], 3000);
+    targetSteps[0] = targetSteps[2];
+    targetSteps[1] = targetSteps[3];
+    targetSteps[2] = -1;
+    targetSteps[3] = -1;
+
+    delay(2000);
+    Serial.write("C\n");
+    
   }
   else if ((targetSteps[0] == -1) && (targetSteps[2] != -1)){
     targetSteps[0] = targetSteps[2];
@@ -68,6 +79,7 @@ void loop() {
 void MessageHandler(char msg[50]){
   char charHold[50];
   // Respond to Message type
+  Serial.print(msg);
   switch (msg[0]) {
     case 'T':{ // Target
       // Add target point into buffer slot and open movement access
@@ -154,6 +166,43 @@ void HomeRoutine(){
   // Move to the largest position
   stepperJoint.step(inc);
   
+}
+
+void TestHoming(){
+  int baseSens, endSens;
+  bool repeat = true;
+
+  while(repeat){
+    baseSens = analogRead(baseSensor);
+    if (baseSens > 250) {
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+      delay(100);
+    }
+    else{
+      repeat = false;
+    }
+  }
+
+  repeat = true; //Reset loop holder
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(3000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+
+    while(repeat){
+    endSens = analogRead(endSensor);
+    if (endSens < 800) {
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+      delay(100);
+    }
+    else{
+      repeat = false;
+    }
+  }
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(3000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
 }
 
 // Function to opreate two motors at once
